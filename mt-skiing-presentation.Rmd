@@ -1,0 +1,942 @@
+---
+title: "Climate Challenges and Opportunities for the Alpine Ski Industry in Montana"
+subtitle: "A Preliminary Assessment"
+author: "Kyle Bocinsky"
+institute: "Montana Climate Office"
+date: "`r Sys.Date()`"
+output: 
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(mcor)
+library(magrittr)
+library(grid)
+library(ggplot2)
+library(plotly)
+
+saveWidgetFix <- function (widget,file,...) {
+  ## A wrapper to saveWidget which compensates for arguable BUG in
+  ## saveWidget which requires `file` to be in current working
+  ## directory.
+  wd<-getwd()
+  on.exit(setwd(wd))
+  outDir<-dirname(file)
+  file<-basename(file)
+  setwd(outDir);
+  htmlwidgets::saveWidget(widget,file=file,...)
+}
+
+```
+
+background-image: url("figures/ski_beech.jpg")
+background-position: center
+background-size: contain
+---
+background-image: url("figures/ski_beech_map.jpg")
+background-position: center
+background-size: contain
+---
+background-image: url("figures/cataloochee.jpg")
+background-position: center
+background-size: contain
+---
+background-image: url("figures/cataloochee_map.jpg")
+background-position: center
+background-size: contain
+---
+background-image: url("figures/breck.jpg")
+background-position: center
+background-size: contain
+---
+background-image: url("figures/lost_trail.jpg")
+background-position: center
+background-size: contain
+---
+# Game plan
+
+- Review CMIP5 projections for winter in Montana
+
+--
+
+- Compare fortunes of alpine ski areas across the US Rocky Mountains
+
+--
+
+- Suggest investments: Capacity, marketing, infrastructure, and social science!
+
+---
+
+# CMIP5 projections for winter in Montana
+
+- MACAv2 ~4 km downscaled climate projections from 18 GCMs ([U. of Idaho](http://www.climatologylab.org/maca.html))
+
+- BCSD VIC hydrologic model at ~12 km resolution ([Scripps](https://gdo-dcp.ucllnl.org/downscaled_cmip_projections/dcpInterface.html))
+
+- Same data as in the [Montana Climate Assessment](https://montanaclimate.org)<sup>*</sup>
+
+
+.footnote[[*] I used 1981--2010 period for calculating climate normals, as opposed to 1971--2000 in the MCA.]
+
+---
+
+class: inverse, middle, center
+
+# Montana Winters 30-years Hence
+
+---
+
+```{r swe, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+SWE <- 
+  readr::read_rds("data/data-derived/BCSD_mon_VIC_data.Rds")
+
+plot_swe <- 
+  function(i){
+    outfile <- paste0("figures/swe_midcentury_",month.name[i],".html")
+    
+    mcor::mco_leaflet(x = SWE[[i]][[3]],
+                      pal =  "BrBG",
+                      legend_title = stringr::str_c(month.name[i],", 2040–2069<br>",
+                                                    "Snow water equivalent (in.), deviation from normal"),
+                      image_query_title = "Snow water equivalent (in.), deviation from normal",
+                      reverse = TRUE,
+                      midpoint = 0,
+                      breaks = seq(-12,2,1),
+                      digits = 2) %>%
+      saveWidgetFix(outfile,
+                    selfcontained = TRUE
+      )
+    
+    htmltools::HTML(
+      paste0('<iframe src="',outfile,'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+    )
+  }
+
+plot_swe(12)
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe(1)
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe(2)
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe(3)
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe(4)
+
+```
+
+---
+
+```{r maca data, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+maca_data <- readr::read_rds("data/data-derived/maca_data.Rds") %>%
+  dplyr::filter(Measurement %in% c("tasmin","tasmax"),
+                Scenario == "Difference") %>%
+  dplyr::group_by(Month) %>%
+  dplyr::summarise(Data = list(Data %>%
+                                 raster::brick() %>%
+                                 raster::mean(na.rm = T)))
+
+
+plot_temp <- function(i){
+  outfile <- paste0("figures/temp_midcentury_",month.name[i],".html")
+  
+  maca_data %>%
+    dplyr::filter(Month == month.abb[i]) %$%
+    Data[[1]] %>%
+    
+    mcor::mco_leaflet(pal =  "-RdBu",
+                      legend_title = stringr::str_c(month.name[i],", 2040–2069<br>",
+                                                    "Temperature Deviation (ºF)"),
+                      image_query_title = "Temperature Deviation (ºF)",
+                      reverse = TRUE,
+                      midpoint = 0,
+                      breaks = seq(0,8,1),
+                      digits = 1
+    ) %>%
+    saveWidgetFix(outfile,
+                  selfcontained = TRUE
+    )
+  
+  htmltools::HTML(
+    paste0('<iframe src="',outfile,'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+  )
+}
+
+plot_temp(12)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_temp(1)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_temp(2)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_temp(3)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_temp(4)
+
+```
+
+---
+
+```{r maca min data, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+maca_data <- readr::read_rds("data/data-derived/maca_data.Rds") %>%
+  dplyr::filter(Measurement %in% c("tasmin"),
+                Scenario == "rcp85")
+
+
+plot_temp <- function(i){
+  outfile <- paste0("figures/temp-min_midcentury_",month.name[i],".html")
+  
+  maca_data %>%
+    dplyr::filter(Month == month.abb[i]) %$%
+    Data[[1]] %>%
+    
+    mcor::mco_leaflet(pal =  "-RdBu",
+                      legend_title = stringr::str_c(month.name[i],", 2040–2069<br>",
+                                                    "Minimum Temperature (ºF)"),
+                      image_query_title = "Minimum Temperature (ºF)",
+                      reverse = TRUE,
+                      midpoint = 28,
+                      breaks = seq(20,36,2),
+                      digits = 1
+    ) %>%
+    saveWidgetFix(outfile,
+                  selfcontained = TRUE
+    )
+  
+  htmltools::HTML(
+    paste0('<iframe src="',outfile,'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+  )
+}
+
+
+plot_temp(10)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_temp(11)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_temp(12)
+
+```
+
+---
+
+```{r maca pr data, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+maca_data <- readr::read_rds("data/data-derived/maca_data.Rds") %>%
+  dplyr::filter(Measurement %in% c("pr"),
+                Scenario == "Difference")
+
+
+plot_pr <- function(i){
+  outfile <- paste0("figures/pr_midcentury_",month.name[i],".html")
+  
+  maca_data %>%
+    dplyr::filter(Month == month.abb[i]) %$%
+    Data[[1]] %>%
+    
+    mcor::mco_leaflet(pal =  "BrBG",
+                      legend_title = stringr::str_c(month.name[i],", 2040–2069<br>",
+                                                    "Precipitation Deviation (in.)"),
+                      image_query_title = "Precipitation Deviation (in.)",
+                      reverse = TRUE,
+                      midpoint = 0,
+                      breaks = seq(-2,2,0.25),
+                      digits = 2
+    ) %>%
+    saveWidgetFix(outfile,
+                  selfcontained = TRUE
+    )
+  
+  htmltools::HTML(
+    paste0('<iframe src="',outfile,'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+  )
+}
+
+plot_pr(12)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_pr(1)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_pr(2)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_pr(3)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+
+plot_pr(4)
+
+```
+
+---
+# Bottom line
+
+- **Slower and lower SWE accumulation, especially in northwestern MT**
+  - Less snowpack to bring us into spring
+
+- **Warmer average temperatures throughout the winter**
+  - Possibly more rain-on-snow events
+  - Minimal snow-making potential in Oct, better Nov--Dec
+
+- **Increased precipitation at elevation...**
+  - ... but more melting, too.
+
+---
+class: inverse, middle, center
+
+# Winter Across the Rockies
+
+---
+
+```{r ski areas, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+ski_areas_rockies_all <-
+  readr::read_rds("./data/data-derived/ski_areas_rockies_all.rds")
+
+ski_areas_data <- 
+  readr::read_rds("./data/data-derived/ski_areas_data.rds")
+
+ski_area_quants <-
+  readr::read_rds("./data/data-derived/ski_areas_quants.rds")
+
+ski_areas_rockies <-
+  sf::read_sf("data/data-derived/ski_areas_rockies_clean.csv",
+              crs = 4326) %>%
+  dplyr::select(Name = name,
+                Website = official_website,
+                `Opening Year` = opening_year,
+                `Lift Count` = lift_count,
+                `Run Count` = run_count,
+                `Longest Run` = longest_run,
+                `Skiable Acreage` = skiable_acreage,
+                `Top Elevation` = top_elevation,
+                `Bottom Elevation` = bottom_elevation,
+                `Hourly Lift Capacity` = hourly_lift_capacity,
+                `State` = state) %>%
+  dplyr::mutate_at(.vars = dplyr::vars(`Opening Year`:`Hourly Lift Capacity`),
+                   .funs = as.integer)
+
+source("R/mco_leaflet_points.R")
+
+plot_swe_areas2 <- 
+  function(scenario, month, variable,
+           ...){
+    outfile <- paste0("figures/swe_dev_areas_midcentury_",month.name[month],".html")
+    
+    ski_areas_data %>%
+      dplyr::mutate(data = data %>%
+                      purrr::map(function(x){
+                        x %>%
+                          dplyr::filter(Scenario == scenario,
+                                        Month == month) %>%
+                          dplyr::select(variable)
+                        
+                      })) %>%
+      tidyr::unnest(data) %>%
+      mco_leaflet_points(col = "Snow Water Equivalent",
+                         pal =  "BrBG",
+                         legend_title = stringr::str_c(month.name[month],", 2040–2069<br>",
+                                                       "Snow water equivalent (in.)<br>deviation from normal"),
+                         reverse = TRUE,
+                         midpoint = 0,
+                         digits = 2,
+                         ...) %>%
+      saveWidgetFix(outfile,
+                    selfcontained = TRUE
+      )
+    
+    htmltools::HTML(
+      paste0('<iframe src="',outfile,'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+    )
+  }
+
+plot_swe_areas2(scenario = "Difference", 
+                month = 12, 
+                variable = "Snow Water Equivalent",
+                breaks = seq(-6,2,1))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas2(scenario = "Difference", 
+                month = 1, 
+                variable = "Snow Water Equivalent",
+                breaks = seq(-6,2,1))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas2(scenario = "Difference", 
+                month = 2, 
+                variable = "Snow Water Equivalent",
+                breaks = seq(-6,2,1))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas2(scenario = "Difference", 
+                month = 3, 
+                variable = "Snow Water Equivalent",
+                breaks = seq(-6,2,1))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas2(scenario = "Difference", 
+                month = 4, 
+                variable = "Snow Water Equivalent",
+                breaks = seq(-6,2,1))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas <- 
+  function(scenario, month, variable,
+           ...){
+    outfile <- paste0("figures/swe_areas_midcentury_",month.name[month],".html")
+    
+    ski_areas_data %>%
+      dplyr::mutate(data = data %>%
+                      purrr::map(function(x){
+                        x %>%
+                          dplyr::filter(Scenario == scenario,
+                                        Month == month) %>%
+                          dplyr::select(variable)
+                        
+                      })) %>%
+      tidyr::unnest(data) %>%
+      mco_leaflet_points(col = "Snow Water Equivalent",
+                         pal =  "BrBG",
+                         legend_title = stringr::str_c(month.name[month],", 2040–2069<br>",
+                                                       "Snow water equivalent (in.)"),
+                         reverse = TRUE,
+                         midpoint = 0,
+                         digits = 2,
+                         ...) %>%
+      saveWidgetFix(outfile,
+                    selfcontained = TRUE
+      )
+    
+    htmltools::HTML(
+      paste0('<iframe src="',outfile,'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+    )
+  }
+
+plot_swe_areas(scenario = "rcp85", 
+               month = 12, 
+               variable = "Snow Water Equivalent",
+               breaks = seq(0,20,4))
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas(scenario = "rcp85", 
+               month = 1, 
+               variable = "Snow Water Equivalent",
+               breaks = seq(0,20,4))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas(scenario = "rcp85", 
+               month = 2, 
+               variable = "Snow Water Equivalent",
+               breaks = seq(0,20,4))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas(scenario = "rcp85", 
+               month = 3, 
+               variable = "Snow Water Equivalent",
+               breaks = seq(0,20,4))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas(scenario = "rcp85", 
+               month = 4, 
+               variable = "Snow Water Equivalent",
+               breaks = seq(0,20,4))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+plot_swe_areas <- 
+  function(scenario, 
+           month, 
+           variable,
+           save = TRUE,
+           ...){
+    outfile <- paste0("figures/ski_areas_",variable,"_",scenario,"_",month.name[month],".html")
+    
+    out <- ski_areas_data %>%
+      dplyr::mutate(data = data %>%
+                      purrr::map(function(x){
+                        x %>%
+                          dplyr::filter(Scenario == scenario,
+                                        Month == month) %>%
+                          dplyr::select(variable)
+                        
+                      })) %>%
+      tidyr::unnest(data) %>%
+      mco_leaflet_points(col = variable,
+                         ...) 
+    
+    if(save){
+      out %>%
+        saveWidgetFix(outfile,
+                      selfcontained = TRUE
+        )
+      
+      htmltools::HTML(
+        paste0('<iframe src="',outfile,'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+      )
+    }else{
+      out
+    }
+    
+  }
+
+month = 10
+plot_swe_areas(scenario = "rcp85", 
+               month = month, 
+               variable = "Minimum Temperature",
+               pal =  "-RdBu",
+               legend_title = stringr::str_c(month.name[month],", 2040–2069<br>",
+                                             "Minimum Temperature (ºF)"),
+               reverse = TRUE,
+               midpoint = 28,
+               digits = 2,
+               breaks = seq(20,36,2))
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+month = 11
+plot_swe_areas(scenario = "rcp85", 
+               month = month, 
+               variable = "Minimum Temperature",
+               pal =  "-RdBu",
+               legend_title = stringr::str_c(month.name[month],", 2040–2069<br>",
+                                             "Minimum Temperature (ºF)"),
+               reverse = TRUE,
+               midpoint = 28,
+               digits = 2,
+               breaks = seq(20,36,2))
+
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+month = 12
+plot_swe_areas(scenario = "rcp85", 
+               month = month, 
+               variable = "Minimum Temperature",
+               pal =  "-RdBu",
+               legend_title = stringr::str_c(month.name[month],", 2040–2069<br>",
+                                             "Minimum Temperature (ºF)"),
+               reverse = TRUE,
+               midpoint = 28,
+               digits = 2,
+               breaks = seq(20,36,2))
+```
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE}
+month = 1
+plot_swe_areas(scenario = "rcp85", 
+               month = month, 
+               variable = "Minimum Temperature",
+               pal =  "-RdBu",
+               legend_title = stringr::str_c(month.name[month],", 2040–2069<br>",
+                                             "Minimum Temperature (ºF)"),
+               reverse = TRUE,
+               midpoint = 28,
+               digits = 2,
+               breaks = seq(20,36,2))
+
+```
+
+---
+# Bottom line
+
+- SWE effects will be felt in Montana...
+  - ... but moreso in Idaho and Utah
+
+- Montana ski areas also can get a jump on snowmaking
+
+- South-central Montana (Beartooths and Big Sky) might see *increased* late-season SWE
+
+- Summit County, Colorado is pretty insulated
+
+---
+class: inverse, middle, center
+
+# Opportunities
+
+---
+background-image: url("figures/ski_areas_min_temp.gif")
+background-position: center
+background-size: contain
+
+---
+
+```{r out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE, echo=FALSE, warning=FALSE}
+df <- ski_area_quants %>%
+  dplyr::ungroup() %>%
+  dplyr::left_join(ski_areas_rockies %>%
+                     dplyr::select(Name,State) %>%
+                     sf::st_drop_geometry()
+  ) %>%
+  dplyr::filter(Month %in% c(10:12,1:4)) %>%
+  dplyr::mutate(State = factor(State,
+                               levels = c("Montana",
+                                          "Arizona",
+                                          "Colorado",
+                                          "Idaho",
+                                          "New Mexico",
+                                          "Utah",
+                                          "Wyoming"),
+                               ordered = TRUE)) %>%
+  dplyr::arrange(-State) %>%
+  dplyr::mutate(Month = month.name[Month] %>%
+                  factor(levels = month.name[c(10:12,1:4)],
+                         ordered = TRUE)) %>%
+  dplyr::arrange(State, Name, Year, Month)
+
+g <- 
+  df %>%
+  dplyr::filter(Month == "November") %>%
+  ggplot(aes(x = Year,
+             y = `Minimum Temperature`,
+             color = State,
+             group = Name)) +
+  geom_smooth(se = FALSE) +
+  geom_smooth(data = df %>%
+                dplyr::filter(State == "Montana"),
+              size = 2,
+              se = FALSE) +
+  scale_color_manual(values = "black" %>%
+                       c(RColorBrewer::brewer.pal(6,"Set2")) %>%
+                       magrittr::set_names(c("Montana",
+                                             "Arizona",
+                                             "Colorado",
+                                             "Idaho",
+                                             "New Mexico",
+                                             "Utah",
+                                             "Wyoming"))
+  ) +
+  geom_hline(yintercept = 28,
+             linetype = 2,
+             size = 1.5,
+             color = "gray50") +
+  ggthemes::theme_few(18)
+
+ggplotly(g) %>%
+  saveWidgetFix("figures/ski_temp_november.html",
+                selfcontained = TRUE
+  )
+
+htmltools::HTML(
+  paste0('<iframe src="',"figures/ski_temp_november.html",'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+)
+```
+
+---
+```{r wobus, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE, echo=FALSE, warning=FALSE}
+
+wobus <-
+  "./reference/Wobus_et_al_2017_data.xlsx" %>%
+  readxl::excel_sheets() %>%
+  magrittr::set_names(.,.) %>%
+  purrr::map(~readxl::read_excel("./reference/Wobus_et_al_2017_data.xlsx", sheet = .x))
+
+wobus_season <- 
+  wobus %>%
+  magrittr::extract(startsWith(names(wobus),"Season")) %>%
+  dplyr::bind_rows(.id = "Model") %>%
+  dplyr::rename(`Historical 2011` = Current) %>%
+  tidyr::pivot_longer(cols = `Historical 2011`:`RCP8.5 2090`,
+                      names_to = "Scenario",
+                      values_to = "Season Length") %>%
+  tidyr::separate(Scenario, into = c("Scenario","Year"), sep = " ") %>%
+  dplyr::mutate_at(.vars = dplyr::vars(`Model ID`, Year, `Season Length`), function(x){
+    x %>%
+      as.integer() %>%
+      tidyr::replace_na(0)
+  }) %>%
+  dplyr::select(-`Model ID`) %>%
+  dplyr::mutate(Model = stringr::str_remove(Model, "Season Length — ")) %>%
+  dplyr::group_by(Location, State, Scenario, Year) %>%
+  dplyr::summarise(`Season Length` = median(`Season Length`)) %>%
+  dplyr::filter(State %in% c("MT",
+                             "AZ",
+                             "CO",
+                             "ID",
+                             "NM",
+                             "UT",
+                             "WY"))
+
+g <- 
+  wobus_season %>%
+  dplyr::filter(Scenario %in% c("Historical","RCP8.5")) %>%
+  dplyr::ungroup() %>%
+  ggplot(aes(x = Year,
+             y = `Season Length`,
+             color = State,
+             group = Location)) +
+  geom_line() +
+  geom_line(data = wobus_season %>%
+              dplyr::filter(Scenario %in% c("Historical","RCP8.5")) %>%
+              dplyr::ungroup() %>%
+              dplyr::filter(State == "MT"),
+            size = 2,
+            se = FALSE) +
+  scale_color_manual(values = "black" %>%
+                       c(RColorBrewer::brewer.pal(6,"Set2")) %>%
+                       magrittr::set_names(c("MT",
+                                             "AZ",
+                                             "CO",
+                                             "ID",
+                                             "NM",
+                                             "UT",
+                                             "WY"))
+  ) +
+  ggthemes::theme_few(18)
+
+ggplotly(g) %>%
+  saveWidgetFix("figures/ski_seasons_wobus.html",
+                selfcontained = TRUE
+  )
+
+htmltools::HTML(
+  paste0('<iframe src="',"figures/ski_seasons_wobus.html",'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+)
+
+```
+
+---
+
+```{r, out.width='100%', fig.height=6, eval=require('leaflet'), message=FALSE, echo=FALSE, warning=FALSE}
+
+
+wobus_visits_dollars <-
+  wobus$`Visits & Dollars — Changing Pop` %>%
+  tidyr::pivot_longer(cols = -State,
+                      names_to = "Scenario") %>%
+  tidyr::separate(Scenario, into = c("Type","Scenario","Year"), sep = " ") %>%
+  tidyr::pivot_wider(names_from = Type,
+                     values_from = value) %>%
+  dplyr::group_by(State) %>%
+  dplyr::mutate(`Dollars per Visit` = round(mean(Dollars/Visits, na.rm = TRUE),0)) %>%
+  dplyr::rowwise() %>%
+  dplyr::mutate(Dollars = tidyr::replace_na(Dollars, Visits * `Dollars per Visit`)) %>%
+  dplyr::ungroup() %>%
+  tidyr::pivot_longer(cols = Visits:Dollars,
+                      names_to = "Impact",
+                      values_to = "Count"
+  )  %>%
+  dplyr::filter(State %in% c("MT",
+                             "AZ",
+                             "CO",
+                             "ID",
+                             "NM",
+                             "UT",
+                             "WY"))
+
+options(scipen=999)
+
+g <- 
+  wobus_visits_dollars %>%
+  dplyr::filter(Scenario %in% c("Historical","RCP8.5")) %>%
+  # dplyr::group_by(Impact) %>%
+  ggplot(aes(x = Year,
+             y = Count,
+             color = State,
+             group = State)) +
+  geom_line() +
+  geom_line(data = wobus_visits_dollars %>%
+              dplyr::filter(Scenario %in% c("Historical","RCP8.5")) %>%
+              dplyr::filter(State == "MT"),
+            size = 2) +
+  scale_color_manual(values = "black" %>%
+                       c(RColorBrewer::brewer.pal(6,"Set2")) %>%
+                       magrittr::set_names(c("MT",
+                                             "AZ",
+                                             "CO",
+                                             "ID",
+                                             "NM",
+                                             "UT",
+                                             "WY"))
+  ) +
+  ggthemes::theme_few(18) +
+  ggplot2::scale_y_log10() +
+  ylab(NULL) +
+  facet_wrap("Impact",
+             ncol = 1,
+             scales = "free_y")
+
+ggplotly(g) %>%
+  saveWidgetFix("figures/ski_impact_wobus.html",
+                selfcontained = TRUE
+  )
+
+htmltools::HTML(
+  paste0('<iframe src="',"figures/ski_impact_wobus.html",'" height="100%" width="100%" frameborder="0" style="position:absolute; z-index:1; top:0px; left:0px"></iframe>')
+)
+
+```
+
+---
+
+# Half-baked idea: "Optimal Skiing Theory" of Patch Choice
+
+- Existing ski areas represent "patches" of a resource (fresh pow)
+
+--
+
+- Purported declines in attendence represent unmet needs, as well as unfilled niche capacity
+
+--
+
+- Create a "network" of patches (weighted geographically? infrastructurally?)
+
+--
+
+- Deploy a dynamic patch-choice model of where skiing refugees might end up
+
+---
+
+# Opportunities
+
+- **Capacity**
+  - Can Montana absorb unfulfilled skiing needs?
+  - How do we better quantify the opportunity for increased tourism?
+
+--
+
+- **Infrastructure**
+  - Do we have the physical and capital resources to grow the MT ski industry?
+  - At ski areas: Lift capacity, lodging, dining, access
+  - Regionally: Air service, roads, lodging at travel hubs?
+
+--
+
+- **Marketing**
+  - How can we better target marketing dollars towards faster-changing and less-fortunate regions?
+  - Can we deploy climate analogs for marketing MT Skiing (If you love skiing Snow Bird powder, Whitefish will be the place to be in 2040!)
+
+--
+
+- **Social Science**
+  - How do we address the loss that skiers will feel in Montana?
+  - Loss of local "flavor"
+  - Loss of some terrain
+  - How do we prevent an exodus from MT ski resorts for snowier places?
+  - How can we better understand motivations of the skiers that travel?
